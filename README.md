@@ -12,3 +12,9 @@ venv\Scripts\activate      # Windows
 
 # Instalar dependencias
 pip install -r requirements.txt
+
+
+# Registro de usuarios 
+el primer usuario se creara admi por defecto 
+expira en 30 minutos 
+

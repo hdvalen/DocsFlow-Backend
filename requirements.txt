@@ -6,6 +6,5 @@ mysql-connector-python==8.1.0
 SQLAlchemy==1.4.41
 
 #seguridad
-passlib[bcrypt]==1.7.4
+passlib[bcrypt]
 python-jose==3.3.0
-

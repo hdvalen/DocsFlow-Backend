@@ -21,7 +21,7 @@ def test_db():
         print("❌ Error al conectar:", e)
 
 # Routers
-app.include_router(users_router, prefix="/users", tags=["Users"])
+app.include_router(users_router, tags=["Users"])
 app.include_router(auth_router)
 
 # Ruta raíz 

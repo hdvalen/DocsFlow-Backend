@@ -32,9 +32,9 @@ async def upload_document(
 @router.get("/user/{user_id}")
 def read_documents_by_user(user_id: int, db: Session = Depends(get_db)):
     documents = get_documents_by_user(user_id=user_id, db=db)
-    return {documents}
+    return {"documento": documents}
 
 @router.get("/{document_id}")
 def read_document_by_id(document_id: int, db: Session = Depends(get_db)):
     document = get_documents_by_id(document_id=document_id, db=db)
-    return {document}
+    return {"documento": document}

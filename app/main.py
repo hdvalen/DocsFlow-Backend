@@ -4,7 +4,7 @@ from sqlalchemy import text
 from app.database.database import engine
 
 from app.routes.users.UsersRoutes import router as users_router
-
+from app.routes.email.emailRouter import router as email_router
 app = FastAPI()
 
 
@@ -20,7 +20,7 @@ def test_db():
 
 # Routers
 app.include_router(users_router, prefix="/users", tags=["Users"])
-
+app.include_router(email_router, prefix="/auth", tags=["Auth"])
 
 # Ruta raíz 
 @app.get("/")

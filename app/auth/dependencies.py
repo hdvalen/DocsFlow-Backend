@@ -1,25 +1,22 @@
 from fastapi import Depends, HTTPException, Request
-from fastapi.security import OAuth2PasswordBearer
-from app.auth.AuthJwtHandler import decode_access_token
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from jose import jwt, JWTError, ExpiredSignatureError
+from app.core.config import settings
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")  # ruta para login
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request):
+        credentials: HTTPAuthorizationCredentials = await super().__call__(request)
+        if not credentials:
+            raise HTTPException(status_code=403, detail="Credenciales no encontradas")
+        return credentials.credentials
 
-def get_current_user(token: str = Depends(oauth2_scheme)):
-    payload = decode_access_token(token)
-    if payload is None:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return payload
-
-def get_current_user_optional(request: Request):
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        return None
-
+def decode_access_token(token: str):
     try:
-        scheme, token = auth_header.split()
-        if scheme.lower() != "bearer":
-            return None
-        payload = decode_access_token(token)
-        return payload
-    except Exception:
-        return None
+        return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+    except ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token expirado")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+def get_current_user(token: str = Depends(JWTBearer())):
+    return decode_access_token(token)

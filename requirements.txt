@@ -8,3 +8,6 @@ SQLAlchemy==1.4.41
 #seguridad
 passlib[bcrypt]
 python-jose==3.3.0
+
+#validador de email
+pydantic[email]

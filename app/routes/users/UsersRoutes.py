@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 from app.database.database import get_db
 from app.controllers.users.UsersController import UsersController
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, role_required
 from app.schemas.Users.UsersSchema import UserRegisterRequest
 from app.models.users.UsersModel import User
 
@@ -12,7 +12,7 @@ router = APIRouter(prefix="/users", tags=["Users"])
 def register_user(
     user_data: UserRegisterRequest,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(role_required(["admin"]))  # solo admin
 ):
     users_exist = db.exec(select(User)).first()
 

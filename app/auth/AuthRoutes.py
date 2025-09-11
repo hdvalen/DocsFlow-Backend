@@ -3,9 +3,10 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from passlib.context import CryptContext
+from pydantic import BaseModel
 from app.database.database import get_db
 from app.core.security import create_access_token
-from pydantic import BaseModel
+from app.schemas.Users.UsersSchema import UserResponse, LoginResponse
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -17,7 +18,7 @@ class LoginSchema(BaseModel):
     email: str
     password: str
 
-@router.post("/login")
+@router.post("/login", response_model=LoginResponse)
 def login(user: LoginSchema, db: Session = Depends(get_db)):
     db_user = db.execute(
         text("SELECT * FROM users WHERE email = :email"),
@@ -38,7 +39,6 @@ def login(user: LoginSchema, db: Session = Depends(get_db)):
                 detail=f"Cuenta bloqueada. Intente de nuevo en {mins} min {secs} seg."
             )
         else:
-            # ⏱ Resetear intentos tras los 30 min
             db.execute(
                 text("UPDATE users SET failed_attempts = 0 WHERE id = :id"),
                 {"id": db_user["id"]}
@@ -53,7 +53,6 @@ def login(user: LoginSchema, db: Session = Depends(get_db)):
             {"fa": new_attempts, "id": db_user["id"]}
         )
         db.commit()
-
         remaining = MAX_ATTEMPTS - new_attempts
         if remaining > 0:
             raise HTTPException(
@@ -64,7 +63,7 @@ def login(user: LoginSchema, db: Session = Depends(get_db)):
         else:
             raise HTTPException(
                 status_code=403,
-                detail=f"Cuenta bloqueada por {LOCK_TIME_MINUTES} minutos debido a múltiples intentos fallidos."
+                detail=f"Cuenta bloqueada por {LOCK_TIME_MINUTES} minutos."
             )
 
     # ✅ Login exitoso → resetear intentos
@@ -83,8 +82,24 @@ def login(user: LoginSchema, db: Session = Depends(get_db)):
         """),
         {"user_id": db_user["id"]}
     ).mappings().fetchone()
-
     role = role_row["name"] if role_row else "user"
 
+    # Construir objeto UserResponse
+    user_response = UserResponse(
+        id=db_user["id"],
+        name=db_user["name"],
+        email=db_user["email"],
+        role=role,
+        company_id=db_user.get("company_id"),
+        department_id=db_user.get("department_id")
+    )
+
+    # Crear token
     token = create_access_token({"sub": db_user["email"], "role": role})
-    return {"access_token": token, "token_type": "bearer"}
+
+    # Devolver LoginResponse
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        user=user_response
+    )

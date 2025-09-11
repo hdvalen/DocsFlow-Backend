@@ -42,6 +42,7 @@ async def upload_document(
 
     return {"message": "Documento guardado correctamente", "document": doc}
 
+
 @router.get("/user/{user_id}", dependencies=[Depends(JWTBearer())])
 def read_documents_by_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     # 🔒 Validación de permisos
@@ -56,6 +57,7 @@ def read_documents_by_user(user_id: int, db: Session = Depends(get_db), current_
 @router.get("/{document_id}", dependencies=[Depends(JWTBearer())])
 def read_document_by_id(document_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     document = get_documents_by_id(document_id=document_id, db=db)
+
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
 
@@ -68,3 +70,4 @@ def read_document_by_id(document_id: int, db: Session = Depends(get_db), current
             )
 
     return {"document": document}
+

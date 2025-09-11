@@ -8,12 +8,12 @@ from app.controllers.email.emailConfiguracion import conf
 from app.models.email.emailModel import PasswordResetRequest, ResetPassword
 from fastapi_mail import FastMail, MessageSchema
 
-router = APIRouter(prefix="/auth", tags=["Auth"])
+router = APIRouter()
 
 
 @router.post("/password-reset-request")
-async def password_reset_request(data: PasswordResetRequest, session: Session = Depends(get_db)):
-    token = create_password_reset_token(data.email, session)
+async def password_reset_request(data: PasswordResetRequest, db: Session = Depends(get_db)):
+    token = create_password_reset_token(data.email, db)
 
     reset_link = f"http://localhost:8000/reset-password-form?token={token}"
     message = MessageSchema(
@@ -30,6 +30,5 @@ async def password_reset_request(data: PasswordResetRequest, session: Session = 
 
 @router.post("/reset-password")
 def reset_password(data: ResetPassword, session: Session = Depends(get_db)):
-    # 1. Usar la función de servicio para cambiar la contraseña
-    result = reset_user_password(data.token, data.new_password, session)
+    result = reset_user_password(data.token, data.new_password, data.confirm_password, session)
     return result

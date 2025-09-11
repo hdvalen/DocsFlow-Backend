@@ -50,8 +50,8 @@ def reset_user_password(token: str, new_password: str, session: Session):
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
 
-    hashed_password = pwd_context.hash(new_password)
-    user.hashed_password = hashed_password
+    user.password_hash = pwd_context.hash(new_password)
+
     session.add(user)
 
     session.delete(token_obj)

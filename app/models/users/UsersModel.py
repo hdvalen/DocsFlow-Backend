@@ -1,5 +1,7 @@
 from sqlmodel import SQLModel, Field
 from typing import Optional
+from ..company.company import Company
+from ..departament.departament import Department
 
 class User(SQLModel, table=True):
     __tablename__ = "users"

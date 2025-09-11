@@ -30,5 +30,5 @@ async def password_reset_request(data: PasswordResetRequest, db: Session = Depen
 
 @router.post("/reset-password")
 def reset_password(data: ResetPassword, session: Session = Depends(get_db)):
-    result = reset_user_password(data.token, data.new_password, session)
+    result = reset_user_password(data.token, data.new_password, data.confirm_password, session)
     return result

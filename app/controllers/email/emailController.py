@@ -34,28 +34,31 @@ def create_password_reset_token(email: str, db: Session = Depends(get_db)) -> st
     return token
 
 
-def reset_user_password(token: str, new_password: str, session: Session):
+def reset_user_password(token: str, new_password: str, confirm_password: str, db: Session):
 
     statement = select(PasswordResetToken).where(PasswordResetToken.token == token)
-    token_obj = session.exec(statement).first()
+    token_obj = db.exec(statement).first()
     if not token_obj:
         raise HTTPException(status_code=400, detail="Token inválido")
 
     if datetime.utcnow() > token_obj.created_at + timedelta(hours=1):
-        session.delete(token_obj)
-        session.commit()
+        db.delete(token_obj)
+        db.commit()
         raise HTTPException(status_code=400, detail="Token expirado")
 
-    user = session.get(User, token_obj.user_id)
+    user = db.get(User, token_obj.user_id)
     if not user:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    
+    if new_password != confirm_password:
+        raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
 
     user.password_hash = pwd_context.hash(new_password)
 
-    session.add(user)
+    db.add(user)
 
-    session.delete(token_obj)
+    db.delete(token_obj)
 
-    session.commit()
+    db.commit()
 
     return {"msg": "Contraseña actualizada con éxito"}

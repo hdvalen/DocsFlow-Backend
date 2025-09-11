@@ -6,6 +6,7 @@ from app.routes.users.UsersRoutes import router as users_router
 from app.auth.AuthRoutes import router as auth_router
 from app.auth.dependencies import JWTBearer
 from app.routes.documentPdf.DocumentRouter import router as document_router
+from app.routes.email.emailRouter import router as email_router
 
 app = FastAPI()
 
@@ -20,9 +21,9 @@ def test_db():
 
 # Routers combinados
 app.include_router(users_router, prefix="/users", tags=["Users"])
-app.include_router(auth_router)  # mantiene autenticación
+app.include_router(auth_router)  
 app.include_router(document_router, prefix="/documents", tags=["Documents"])
-
+app.include_router(email_router, prefix="/email", tags=["Email"])  
 # Ruta raíz
 @app.get("/")
 def root():

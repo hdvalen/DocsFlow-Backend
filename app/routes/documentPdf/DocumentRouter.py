@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlmodel import Session
 from app.database.database import get_db
 from app.controllers.documents.documentsController import guardar_documento, get_documents_by_user, get_documents_by_id, get_all_documents, delete_document
-from app.models.Document.DocumentModel import DocumentCreate
+from app.models.Document.DocumentModel import Document, DocumentCreate
 from app.auth.dependencies import get_current_user, JWTBearer
 from app.auth.dependencies import role_required
 
@@ -64,21 +64,22 @@ def read_all_documents(db: Session = Depends(get_db)):
     documents = get_all_documents(db=db)
     return {"documents": documents}
 
-@router.delete("/{document_id}")
-def delete_document_route(document_id: int, db: Session = Depends(get_db)):
-    result = delete_document(document_id=document_id, db=db)
-    return result
-
+@router.delete("/{document_id}", dependencies=[Depends(JWTBearer())])
+def delete_document_route(document_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    document = db.get(Document, document_id)
     if not document:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
 
-    # 🔒 Validación de permisos
+    # Validación de permisos
     if current_user["role"] != "admin":
         if document.company_id != current_user["company_id"] or document.department_id != current_user["department_id"]:
             raise HTTPException(
                 status_code=403,
-                detail="No tienes permisos para ver este documento"
+                detail="No tienes permisos para eliminar este documento"
             )
 
-    return {"document": document}
+    db.delete(document)
+    db.commit()
+    return {"detail": "Documento eliminado correctamente"}
+
 

@@ -52,7 +52,7 @@ def login(user: LoginSchema, db: Session = Depends(get_db)):
                 detail=f"Cuenta bloqueada. Intente de nuevo en {mins} min {secs} seg."
             )
         else:
-            # Resetear intentos si ya pasó el tiempo de bloqueo
+            # ear intentos si ya pasó el tiempo de bloqueo
             db.execute(
                 text("UPDATE users SET failed_attempts = 0 WHERE id = :id"),
                 {"id": db_user["id"]}

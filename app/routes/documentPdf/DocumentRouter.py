@@ -7,7 +7,7 @@ from app.models.Document.DocumentModel import DocumentCreate
 router = APIRouter(tags=["Documents"])
 
 
-@router.post("/")
+@router.post("/upload-document")
 async def upload_document(
     file: UploadFile = File(...),
     department_id: int = Form(...),

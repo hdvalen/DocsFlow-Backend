@@ -36,3 +36,17 @@ def get_documents_by_id(document_id: int, db: Session  = Depends(get_db)):
 
     return document
 
+
+def get_all_documents(db: Session  = Depends(get_db)):
+    return db.query(Document).all()
+
+def delete_document(document_id: int, db: Session = Depends(get_db)):
+    document = db.query(Document).filter(Document.id == document_id).first()
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+    
+    db.delete(document)
+    db.commit()
+    
+    return {"detail": "Documento eliminado correctamente"}

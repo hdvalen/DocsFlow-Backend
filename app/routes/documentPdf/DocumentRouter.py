@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
 from sqlmodel import Session
 from app.database.database import get_db
-from app.controllers.documents.documentsController import guardar_documento, get_documents_by_user, get_documents_by_id
+from app.controllers.documents.documentsController import guardar_documento, get_documents_by_user, get_documents_by_id, get_all_documents, delete_document
 from app.models.Document.DocumentModel import DocumentCreate
 from app.auth.dependencies import get_current_user, JWTBearer
 from app.auth.dependencies import role_required
@@ -57,17 +57,4 @@ def read_documents_by_user(user_id: int, db: Session = Depends(get_db), current_
 @router.get("/{document_id}", dependencies=[Depends(JWTBearer())])
 def read_document_by_id(document_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     document = get_documents_by_id(document_id=document_id, db=db)
-
-    if not document:
-        raise HTTPException(status_code=404, detail="Documento no encontrado")
-
-    # 🔒 Validación de permisos
-    if current_user["role"] != "admin":
-        if document.company_id != current_user["company_id"] or document.department_id != current_user["department_id"]:
-            raise HTTPException(
-                status_code=403,
-                detail="No tienes permisos para ver este documento"
-            )
-
-    return {"document": document}
-
+    return {"documento": document}

@@ -9,7 +9,7 @@ from app.schemas.Documents.DocumentsSchema import DocumentResponse
 class UsersController:
 
     @staticmethod
-    def register_user(name: str, email: str, password: str, db: Session, role_name: str = None):
+    def er_user(name: str, email: str, password: str, db: Session, role_name: str = None):
         # Verificar si ya existe algún admin
         admin_exists = db.execute(text("""
             SELECT 1

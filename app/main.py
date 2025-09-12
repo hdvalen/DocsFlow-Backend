@@ -1,6 +1,8 @@
 from fastapi import FastAPI, Depends
 from sqlmodel import Session
 from sqlalchemy import text
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.database.database import engine
 from app.routes.users.UsersRoutes import router as users_router
 from app.auth.AuthRoutes import router as auth_router
@@ -10,21 +12,36 @@ from app.routes.email.emailRouter import router as email_router
 
 app = FastAPI()
 
+# 🔹 Configuración de CORS
+origins = [
+    "http://localhost:5174",   # Frontend en Vite
+    "http://127.0.0.1:5174",   # A veces Vite usa esta IP
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,       # dominios permitidos
+    allow_credentials=True,
+    allow_methods=["*"],         # todos los métodos HTTP
+    allow_headers=["*"],         # todos los headers
+)
+
 @app.on_event("startup")
 def test_db():
     try:
         with Session(engine) as session:
             session.exec(text("SELECT 1"))
-        print("Conexión a la base de datos exitosa")
+        print("✅ Conexión a la base de datos exitosa")
     except Exception as e:
         print("❌ Error al conectar:", e)
 
-# Routers combinados
+# 🔹 Routers combinados
 app.include_router(users_router, prefix="/users", tags=["Users"])
 app.include_router(auth_router)  
 app.include_router(document_router, prefix="/documents", tags=["Documents"])
 app.include_router(email_router, prefix="/email", tags=["Email"])  
-# Ruta raíz
+
+# 🔹 Ruta raíz
 @app.get("/")
 def root():
     return {"msg": "Bienvenido a DocsFlow API 🚀"}

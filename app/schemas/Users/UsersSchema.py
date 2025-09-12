@@ -1,5 +1,7 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional
+from app.schemas.Documents.DocumentsSchema import DocumentResponse
+from typing import List
 
 class UserRegisterRequest(BaseModel):
     name: str
@@ -15,7 +17,7 @@ class UserResponse(BaseModel):
     role: str
     company_id: Optional[int] = None
     department_id: Optional[int] = None
-
+    documents: List[DocumentResponse] = [] 
 class LoginResponse(BaseModel):
     access_token: str
     token_type: str

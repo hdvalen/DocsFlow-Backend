@@ -2,7 +2,6 @@ from fastapi import FastAPI, Depends
 from sqlmodel import Session
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.database.database import engine
 from app.routes.users.UsersRoutes import router as users_router
 from app.auth.AuthRoutes import router as auth_router
@@ -15,9 +14,8 @@ app = FastAPI()
 # 🔹 Configuración de CORS
 origins = [
     "http://localhost:5173",  
-    "http://localhost:5174",  
     "http://127.0.0.1:5173",
-    "http://127.0.0.1:5174",
+    
 ]
 
 app.add_middleware(

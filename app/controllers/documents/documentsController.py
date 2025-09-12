@@ -1,21 +1,30 @@
+from datetime import datetime
 from fastapi import UploadFile, HTTPException, Depends
 from sqlmodel import Session
 from app.models.Document.DocumentModel import Document, DocumentCreate
 from app.database.database import get_db
-
-def guardar_documento( file: UploadFile, doc_data: DocumentCreate, db: Session = Depends(get_db)):
+def guardar_documento(
+    file: UploadFile,
+    doc_data: DocumentCreate,
+    db: Session = Depends(get_db)
+):
+    # Validar tipo de archivo
     if file.content_type != "application/pdf":
         raise HTTPException(status_code=400, detail="Solo se permiten archivos PDF")
 
     doc = Document(
-        department_id=doc_data.department_id,
-        uploaded_by=doc_data.uploaded_by,
-        doc_type_id=doc_data.doc_type_id,
-        company_id=doc_data.company_id,
-        title=doc_data.title,
-        original_filename=file.filename,
-        processed=0
-    )
+    department_id=int(doc_data.department_id),
+    uploaded_by=int(doc_data.uploaded_by),
+    doc_type_id=int(doc_data.doc_type_id),
+    company_id=int(doc_data.company_id) if doc_data.company_id else None,
+    title=doc_data.title,
+    original_filename=file.filename,
+    uploaded_at=datetime.utcnow(),
+    processed=0
+)
+
+
+    # Guardar en DB
     db.add(doc)
     db.commit()
     db.refresh(doc)

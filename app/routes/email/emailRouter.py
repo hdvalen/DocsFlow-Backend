@@ -15,7 +15,7 @@ router = APIRouter()
 async def password_reset_request(data: PasswordResetRequest, db: Session = Depends(get_db)):
     token = create_password_reset_token(data.email, db)
 
-    reset_link = f"http://localhost:8000/reset-password-form?token={token}"
+    reset_link = f"http://localhost:5173/reset-password?token={token}"
     message = MessageSchema(
         subject="🔒 Recuperación de contraseña - DocsFlow",
         recipients=[data.email],

@@ -2,7 +2,6 @@ from fastapi import FastAPI, Depends
 from sqlmodel import Session
 from sqlalchemy import text
 from fastapi.middleware.cors import CORSMiddleware
-
 from app.database.database import engine
 from app.routes.users.UsersRoutes import router as users_router
 from app.auth.AuthRoutes import router as auth_router
@@ -14,16 +13,17 @@ app = FastAPI()
 
 # 🔹 Configuración de CORS
 origins = [
-    "http://localhost:5174",   # Frontend en Vite
-    "http://127.0.0.1:5174",   # A veces Vite usa esta IP
+    "http://localhost:5173",  
+    "http://127.0.0.1:5173",
+    
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,       # dominios permitidos
+    allow_origins=origins,   
     allow_credentials=True,
-    allow_methods=["*"],         # todos los métodos HTTP
-    allow_headers=["*"],         # todos los headers
+    allow_methods=["*"],     
+    allow_headers=["*"],     
 )
 
 @app.on_event("startup")

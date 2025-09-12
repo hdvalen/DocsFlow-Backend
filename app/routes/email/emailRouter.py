@@ -1,6 +1,4 @@
-# controllers/auth.py
-
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session
 from app.database.database import get_db
 from app.controllers.email.emailController import create_password_reset_token, reset_user_password
@@ -15,7 +13,7 @@ router = APIRouter()
 async def password_reset_request(data: PasswordResetRequest, db: Session = Depends(get_db)):
     token = create_password_reset_token(data.email, db)
 
-    reset_link = f"http://localhost:8000/reset-password-form?token={token}"
+    reset_link = f"http://localhost:5173/reset-password?token={token}"
     message = MessageSchema(
         subject="🔒 Recuperación de contraseña - DocsFlow",
         recipients=[data.email],
@@ -67,8 +65,13 @@ async def password_reset_request(data: PasswordResetRequest, db: Session = Depen
 
     return {"msg": "Se ha enviado un email con instrucciones"}
 
-
 @router.post("/reset-password")
 def reset_password(data: ResetPassword, session: Session = Depends(get_db)):
-    result = reset_user_password(data.token, data.new_password, data.confirm_password, session)
-    return result
+    if data.new_password != data.confirm_password:
+        raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
+
+    success = reset_user_password(data.token, data.new_password, data.confirm_password, session)
+    if not success:
+        raise HTTPException(status_code=400, detail="Token inválido o expirado")
+
+    return {"msg": "Tu contraseña ha sido restablecida exitosamente"}

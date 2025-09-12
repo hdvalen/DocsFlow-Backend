@@ -7,7 +7,7 @@ class UserRegisterRequest(BaseModel):
     name: str
     email: EmailStr
     password: str
-    role: Optional[str] = "user"  # <- por defecto user
+    role: Optional[str] = "admin"  # <- por defecto user
 
 
 class UserResponse(BaseModel):

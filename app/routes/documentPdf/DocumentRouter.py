@@ -13,22 +13,14 @@ router = APIRouter(tags=["Documents"])
 async def upload_document(
     file: UploadFile = File(...),
     department_id: int = Form(...),
-    uploaded_by: int = Form(...),
     doc_type_id: int = Form(...),
     company_id: int = Form(...),
     title: str = Form(...),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    # 🔒 Validación de permisos
-    if current_user["role"] != "admin":
-        # Usuarios normales solo pueden subir documentos a su empresa y departamento
-        if company_id != current_user["company_id"] or department_id != current_user["department_id"]:
-            raise HTTPException(
-                status_code=403,
-                detail="No tienes permisos para subir documentos a esta empresa o departamento"
-            )
-        uploaded_by = current_user["id"]  # asegurarse que solo se registre su propio ID
+   
+    uploaded_by = current_user["id"]  # asegurarse que solo se registre su propio ID
 
     doc_data = DocumentCreate(
         department_id=department_id,
@@ -38,7 +30,12 @@ async def upload_document(
         title=title
     )
 
-    doc = guardar_documento(file=file, doc_data=doc_data, db=db)
+    doc = guardar_documento(
+    file=file,
+    doc_data=doc_data,
+    uploaded_by=uploaded_by,
+    db=db
+    )
 
     return {"message": "Documento guardado correctamente", "document": doc}
 

@@ -1,4 +1,4 @@
-from fastapi import Depends, HTTPException, Request, status
+from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError, ExpiredSignatureError
 from app.core.config import settings
@@ -10,6 +10,7 @@ class JWTBearer(HTTPBearer):
             raise HTTPException(status_code=403, detail="Credenciales no encontradas")
         return credentials.credentials
 
+
 def decode_access_token(token: str):
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
@@ -18,8 +19,26 @@ def decode_access_token(token: str):
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
+
 def get_current_user(token: str = Depends(JWTBearer())):
-    return decode_access_token(token)
+    """
+    Extrae y normaliza los datos del usuario desde el JWT.
+    """
+    payload = decode_access_token(token)
+
+    user_data = {
+        "id": payload.get("sub"),  # 👈 ahora siempre tendrás "id"
+        "name": payload.get("name"),
+        "email": payload.get("email"),
+        "role": payload.get("role"),
+        "company_id": payload.get("company_id"),
+        "department_id": payload.get("department_id"),
+    }
+
+    if user_data["id"] is None:
+        raise HTTPException(status_code=401, detail="Token inválido: falta id")
+
+    return user_data
 
 
 def role_required(allowed_roles: list):

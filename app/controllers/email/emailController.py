@@ -33,32 +33,39 @@ def create_password_reset_token(email: str, db: Session = Depends(get_db)) -> st
 
     return token
 
+from datetime import datetime, timedelta
+from sqlmodel import Session, select
+from app.models.users.UsersModel import User
+from app.models.email.emailModel import PasswordResetToken
+from app.core.security import pwd_context
 
-def reset_user_password(token: str, new_password: str, confirm_password: str, db: Session):
-
-    statement = select(PasswordResetToken).where(PasswordResetToken.token == token)
-    token_obj = db.exec(statement).first()
+def reset_user_password(token: str, new_password: str, confirm_password: str, db: Session) -> bool:
+    # Buscar token
+    token_obj = db.exec(select(PasswordResetToken).where(PasswordResetToken.token == token)).first()
     if not token_obj:
-        raise HTTPException(status_code=400, detail="Token inválido")
+        return False  # Token inválido
 
+    # Revisar expiración (1 hora)
     if datetime.utcnow() > token_obj.created_at + timedelta(hours=1):
         db.delete(token_obj)
         db.commit()
-        raise HTTPException(status_code=400, detail="Token expirado")
+        return False  # Token expirado
 
+    # Buscar usuario
     user = db.get(User, token_obj.user_id)
     if not user:
-        raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    
+        return False
+
+    # Verificar contraseñas
     if new_password != confirm_password:
-        raise HTTPException(status_code=400, detail="Las contraseñas no coinciden")
+        return False
 
+    # Actualizar contraseña
     user.password_hash = pwd_context.hash(new_password)
-
     db.add(user)
 
+    # Eliminar token
     db.delete(token_obj)
-
     db.commit()
 
-    return {"msg": "Contraseña actualizada con éxito"}
+    return True

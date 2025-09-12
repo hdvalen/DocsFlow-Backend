@@ -28,10 +28,9 @@ INSERT INTO document_types (name, description) VALUES
 ('Recibo', 'Comprobante de pago');
 
 -- Roles
-INSERT INTO roles (name, description) VALUES
-('admin', 'Acceso total al sistema'),
-('operator', 'Carga y consulta de documentos'),
-('analyst', 'Analiza documentos y tablas extraídas');
+INSERT IGNORE INTO roles (id, name, description) VALUES
+(1, 'admin', 'Administrador del sistema con acceso completo'),
+(2, 'user', 'Usuario con permisos básicos');
 
 -- Usuarios
 INSERT INTO users (department_id, company_id, name, email, password_hash) VALUES

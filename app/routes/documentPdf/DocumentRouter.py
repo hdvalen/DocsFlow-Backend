@@ -8,7 +8,7 @@ from app.auth.dependencies import get_current_user, JWTBearer, role_required
 router = APIRouter(tags=["Documents"])
 
 
-@router.post("/", dependencies=[Depends(JWTBearer())])
+@router.post("/")
 async def upload_document(
     file: UploadFile = File(...),
     department_id: int = Form(...),
@@ -64,13 +64,18 @@ def read_document_by_id(document_id: int, db: Session = Depends(get_db), current
     return {"documento": document}
 
  # solo admin puede ver todos los documentos
-@router.get("/", dependencies=[Depends(role_required(["admin"]))])
-def read_all_documents(db: Session = Depends(get_db)):
-    documents = get_all_documents(db=db)
+
+@router.get("/", dependencies=[Depends(get_current_user)])
+def list_documents(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
+    # Solo admin puede ver todos
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Solo los administradores pueden ver todos los documentos")
+    
+    documents = db.query(Document).all()
     return {"documents": documents}
 
-# administrador puede eliminar cualquier documento
-# usuarios solo pueden eliminar sus documentos 
+
+
 @router.delete("/{document_id}", dependencies=[Depends(JWTBearer())])
 def delete_document_route(
     document_id: int,

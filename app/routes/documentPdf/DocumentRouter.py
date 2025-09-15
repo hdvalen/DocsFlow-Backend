@@ -30,10 +30,13 @@ async def upload_document(
     )
 
     doc = guardar_documento(
-    file=file,
-    doc_data=doc_data,
-    uploaded_by=uploaded_by,
-    db=db
+        file=file,
+        title=doc_data.title,
+        department_id=doc_data.department_id,
+        doc_type_id=doc_data.doc_type_id,
+        uploaded_by=doc_data.uploaded_by,
+        company_id=doc_data.company_id,
+        db=db
     )
 
     return {"message": "Documento guardado correctamente", "document": doc}

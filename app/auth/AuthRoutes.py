@@ -97,14 +97,15 @@ def login(user: LoginSchema, db: Session = Depends(get_db)):
         name=db_user["name"],
         email=db_user["email"],
         role=role,
-        company_id=db_user.get("company_id"),
-        department_id=db_user.get("department_id")
+        company_id=db_user["company_id"] if "company_id" in db_user else None,
+        department_id=db_user["department_id"] if "department_id" in db_user else None
     )
 
     # 7️⃣ Crear token con rol
     token = create_access_token({
-        "sub": db_user["email"],
-        "role": role
+    "sub": str(db_user["id"]),  
+    "email": db_user["email"],
+    "role": role
     })
 
     # 8️⃣ Devolver LoginResponse

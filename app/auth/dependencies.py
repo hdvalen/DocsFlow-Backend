@@ -27,7 +27,7 @@ def get_current_user(token: str = Depends(JWTBearer())):
     payload = decode_access_token(token)
 
     user_data = {
-        "id": payload.get("sub"),  # 👈 ahora siempre tendrás "id"
+        "id":int(payload.get("sub")), 
         "name": payload.get("name"),
         "email": payload.get("email"),
         "role": payload.get("role"),

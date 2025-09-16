@@ -3,35 +3,38 @@ from fastapi import UploadFile, HTTPException, Depends
 from sqlmodel import Session
 from app.models.Document.DocumentModel import Document, DocumentCreate
 from app.database.database import get_db
+import os
+import uuid
+
 
 
 from fastapi import Form, File, UploadFile
 
-def guardar_documento(
-    file: UploadFile = File(...),
-    title: str = Form(...),
-    department_id: int = Form(...),
-    doc_type_id: int = Form(...),
-    uploaded_by: int = Form(...),
-    company_id: int = Form(None),
-    db: Session = Depends(get_db)
-):
-    doc = Document(
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+def guardar_documento(file, title, department_id, doc_type_id, uploaded_by, company_id, db):
+    # generar nombre único
+    unique_name = f"{uuid.uuid4()}_{file.filename}"
+    file_path = os.path.join(UPLOAD_DIR, unique_name)
+
+    # guardar físicamente el archivo
+    with open(file_path, "wb") as f:
+        f.write(file.file.read())
+
+    # guardar en BD
+    new_doc = Document(
         title=title,
         department_id=department_id,
         doc_type_id=doc_type_id,
         uploaded_by=uploaded_by,
         company_id=company_id,
-        original_filename=file.filename,
-        uploaded_at=datetime.utcnow(),
-        processed=0
+        original_filename=unique_name
     )
-
-    db.add(doc)
+    db.add(new_doc)
     db.commit()
-    db.refresh(doc)
-
-    return doc
+    db.refresh(new_doc)
+    return new_doc
 
 
 def get_documents_by_user(user_id: int, db: Session  = Depends(get_db)):

@@ -4,9 +4,11 @@ from app.database.database import get_db
 from app.controllers.documents.documentsController import guardar_documento, get_documents_by_user, get_documents_by_id, get_all_documents, delete_document
 from app.models.Document.DocumentModel import DocumentCreate, Document
 from app.auth.dependencies import get_current_user, JWTBearer, role_required
+import pdfplumber
+import os
 
 router = APIRouter(tags=["Documents"])
-
+UPLOAD_DIR = "uploads"  # carpeta donde guardas los pdfs
 
 @router.post("/")
 async def upload_document(
@@ -42,15 +44,46 @@ async def upload_document(
     return {"message": "Documento guardado correctamente", "document": doc}
 
 
-@router.get("/user/{user_id}", dependencies=[Depends(get_current_user)])
-def read_documents_by_user(user_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
-    #  Validación de permisos
-    if current_user["role"] != "admin":
-        if user_id != current_user["id"]:
-            raise HTTPException(status_code=403, detail="No puedes ver documentos de otros usuarios")
 
-    documents = get_documents_by_user(user_id=user_id, db=db)
-    return {"documents": documents}
+@router.get("/{document_id}/extract")
+def extract_pdf_data(document_id: int, db: Session = Depends(get_db)):
+    document = db.query(Document).filter(Document.id == document_id).first()
+    if not document:
+        raise HTTPException(status_code=404, detail="Documento no encontrado")
+
+    pdf_path = os.path.join(UPLOAD_DIR, document.original_filename)
+    if not os.path.exists(pdf_path):
+        raise HTTPException(status_code=404, detail="Archivo PDF no encontrado en el servidor")
+
+    try:
+        tables_data = []
+        text_data = []
+
+        with pdfplumber.open(pdf_path) as pdf:
+            for page in pdf.pages:
+                tables = page.extract_tables()
+                if tables and len(tables) > 0:
+                    for table in tables:
+                        headers = table[0]
+                        rows = table[1:]
+                        tables_data.append({
+                            "headers": headers,
+                            "rows": rows
+                        })
+                else:
+                    text = page.extract_text()
+                    if text:
+                        text_data.append(text)
+
+        return {
+            "document_id": document_id,
+            "tables": tables_data,
+            "text": text_data
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 @router.get("/{document_id}", dependencies=[Depends(get_current_user)])
